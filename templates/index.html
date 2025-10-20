@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Default Prediction</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+        }
+        .container {
+            background: #ffffff;
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #0056b3;
+            margin-bottom: 2rem;
+        }
+        form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        input, select {
+            padding: 0.8rem;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input:focus, select:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+        .helper-text {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+        .button-container {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        button {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        }
+        .prediction-result {
+            margin-top: 2.5rem;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .prediction-result.high-risk {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        .prediction-result.low-risk {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        .prediction-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .prediction-text.high-risk {
+            color: #721c24;
+        }
+        .prediction-text.low-risk {
+            color: #155724;
+        }
+        .probability-container {
+            margin-top: 1rem;
+        }
+        .probability-label {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .progress-bar {
+            background-color: #e9ecef;
+            border-radius: 5px;
+            height: 20px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .progress {
+            background-color: #dc3545; /* Default to high risk color */
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            transition: width 0.5s ease-in-out;
+        }
+        .progress.low-risk {
+            background-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Loan Default Prediction</h1>
+        <form action="/predict" method="post">
+            <div class="form-group">
+                <label for="Age">Age</label>
+                <input type="number" id="Age" name="Age" placeholder="e.g., 35" required>
+                <small class="helper-text">Enter your age in years.</small>
+            </div>
+            <div class="form-group">
+                <label for="Income">Annual Income</label>
+                <input type="number" step="0.01" id="Income" name="Income" placeholder="e.g., 55000.00" required>
+                <small class="helper-text">Your total annual income.</small>
+            </div>
+            <div class="form-group">
+                <label for="LoanAmount">Loan Amount</label>
+                <input type="number" step="0.01" id="LoanAmount" name="LoanAmount" placeholder="e.g., 25000.00" required>
+                <small class="helper-text">The total amount of the loan requested.</small>
+            </div>
+            <div class="form-group">
+                <label for="CreditScore">Credit Score</label>
+                <input type="number" id="CreditScore" name="CreditScore" placeholder="e.g., 680" required>
+                <small class="helper-text">A number between 300 and 850.</small>
+            </div>
+            <div class="form-group">
+                <label for="MonthsEmployed">Months Employed</label>
+                <input type="number" id="MonthsEmployed" name="MonthsEmployed" placeholder="e.g., 60" required>
+                <small class="helper-text">Total months at your current job.</small>
+            </div>
+            <div class="form-group">
+                <label for="NumCreditLines">Number of Credit Lines</label>
+                <input type="number" id="NumCreditLines" name="NumCreditLines" placeholder="e.g., 5" required>
+                <small class="helper-text">Total number of open credit lines.</small>
+            </div>
+            <div class="form-group">
+                <label for="InterestRate">Interest Rate (%)</label>
+                <input type="number" step="0.01" id="InterestRate" name="InterestRate" placeholder="e.g., 12.5" required>
+                <small class="helper-text">The interest rate on the loan.</small>
+            </div>
+            <div class="form-group">
+                <label for="LoanTerm">Loan Term (months)</label>
+                <input type="number" id="LoanTerm" name="LoanTerm" placeholder="e.g., 36" required>
+                <small class="helper-text">The duration of the loan in months.</small>
+            </div>
+            <div class="form-group">
+                <label for="DTIRatio">Debt-to-Income (DTI) Ratio</label>
+                <input type="number" step="0.01" id="DTIRatio" name="DTIRatio" placeholder="e.g., 0.45" required>
+                <small class="helper-text">Your total monthly debt divided by your gross monthly income.</small>
+            </div>
+            <div class="form-group">
+                <label for="Education">Education Level</label>
+                <select id="Education" name="Education" required>
+                    <option value="High School">High School</option>
+                    <option value="Bachelor's">Bachelor's</option>
+                    <option value="Master's">Master's</option>
+                    <option value="PhD">PhD</option>
+                </select>
+                <small class="helper-text">Your highest level of education.</small>
+            </div>
+            <div class="form-group">
+                <label for="EmploymentType">Employment Type</label>
+                <select id="EmploymentType" name="EmploymentType" required>
+                    <option value="Full-time">Full-time</option>
+                    <option value="Part-time">Part-time</option>
+                    <option value="Self-employed">Self-employed</option>
+                    <option value="Unemployed">Unemployed</option>
+                </select>
+                <small class="helper-text">Your current employment status.</small>
+            </div>
+            <div class="form-group">
+                <label for="MaritalStatus">Marital Status</label>
+                <select id="MaritalStatus" name="MaritalStatus" required>
+                    <option value="Single">Single</option>
+                    <option value="Married">Married</option>
+                    <option value="Divorced">Divorced</option>
+                </select>
+                <small class="helper-text">Your current marital status.</small>
+            </div>
+            <div class="form-group">
+                <label for="HasMortgage">Do you have a mortgage?</label>
+                <select id="HasMortgage" name="HasMortgage" required>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+                <small class="helper-text">Select 'Yes' if you have a mortgage.</small>
+            </div>
+            <div class="form-group">
+                <label for="HasDependents">Do you have dependents?</label>
+                <select id="HasDependents" name="HasDependents" required>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+                <small class="helper-text">Select 'Yes' if you financially support others.</small>
+            </div>
+            <div class="form-group">
+                <label for="LoanPurpose">Loan Purpose</label>
+                <select id="LoanPurpose" name="LoanPurpose" required>
+                    <option value="Auto">Auto</option>
+                    <option value="Business">Business</option>
+                    <option value="Education">Education</option>
+                    <option value="Home">Home</option>
+                    <option value="Other">Other</option>
+                </select>
+                <small class="helper-text">The primary reason for the loan.</small>
+            </div>
+            <div class="form-group">
+                <label for="HasCoSigner">Do you have a co-signer?</label>
+                <select id="HasCoSigner" name="HasCoSigner" required>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+                <small class="helper-text">Select 'Yes' if someone else is co-signing.</small>
+            </div>
+            <div class="button-container">
+                <button type="submit">Predict Risk</button>
+            </div>
+        </form>
+
+        {% if prediction_text %}
+        <div class="prediction-result {% if 'High Risk' in prediction_text %}high-risk{% else %}low-risk{% endif %}">
+            <p class="prediction-text {% if 'High Risk' in prediction_text %}high-risk{% else %}low-risk{% endif %}">{{ prediction_text }}</p>
+            {% if probability_text %}
+            <div class="probability-container">
+                <p class="probability-label">{{ probability_text }}</p>
+                <div class="progress-bar">
+                    <div class="progress {% if 'High Risk' in prediction_text %}high-risk{% else %}low-risk{% endif %}" style="width: {{ probability_value * 100 }}%;">
+                        {{ "%.0f"|format(probability_value * 100) }}%
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
